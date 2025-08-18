@@ -1,0 +1,20 @@
+<div class="shop-home-strip card">
+  <div class="shop-home-strip__header">
+    <h3>{{i18n "shop.featured"}}</h3>
+    <div class="pager">
+      <DButton @icon="chevron-left" @action={{this.prev}} @disabled={{this.isFirst}} />
+      <DButton @icon="chevron-right" @action={{this.next}} @disabled={{this.isLast}} />
+    </div>
+  </div>
+  <div class="shop-home-strip__grid">
+    {{#each this.visible as |p|}}
+      <a class="item" href="{{this.productURL p.id}}" target="_blank">
+        {{#if p.first_image}}
+          <img src="{{p.first_image}}" alt="product">
+        {{/if}}
+        <div class="title">{{p.title}}</div>
+        <div class="price">¥{{price-cny p.price_cents}}</div>
+      </a>
+    {{/each}}
+  </div>
+</div>
