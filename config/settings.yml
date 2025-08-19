@@ -1,0 +1,41 @@
+plugins:
+  shop_enabled: { client: true, default: true }
+  shop_test_mode: { client: true, default: true }
+  shop_wechat_mchid: { default: "" }
+  shop_wechat_serial_no: { default: "" }
+  shop_wechat_api_v3_key: { default: "", secret: true }
+  shop_wechat_private_key_pem: { default: "", secret: true }
+  shop_wechat_appid: { default: "" }
+  shop_wechat_notify_url: { default: "" }
+  shop_wechat_oauth_appid: { default: "" }
+  shop_wechat_oauth_secret: { default: "" }
+  shop_wechat_h5_domain: { default: "" }
+  shop_kd100_key: { default: "" }
+  shop_kd100_customer: { default: "" }
+  shop_kd100_callback_url: { default: "" }
+
+
+shop_auto_nav_enabled:
+  default: true
+  client: true
+  description:
+    zh_CN: "自动在侧边栏注入商城链接（免手动配置）"
+
+shop_auto_nav_admin_only_links:
+  default: true
+  client: true
+  description:
+    zh_CN: "注入管理员管理链接（商品/订单/物流）"
+
+shop_auto_nav_public_shop_link:
+  default: true
+  client: true
+  description:
+    zh_CN: "注入前台商城入口（所有人可见）"
+
+
+shop_seed_nav_on_boot:
+  default: true
+  client: false
+  description:
+    zh_CN: "启动时自动写入自定义版块（侧边栏）导航项（幂等）"
