@@ -1,0 +1,32 @@
+zh_CN:
+  js:
+    shop:
+      admin_title: "Shop（商城）"
+      quick_links: "快捷入口"
+      list_title: "商品列表"
+      widget_title: "购买此商品"
+      ship: "发货"
+      featured: "精选商品"
+      nav_shop: "商城"
+
+zh_CN:
+  js:
+    shop:
+      nav:
+        title: "商城"
+        shop: "商城"
+        products: "商品"
+        orders: "订单"
+        logistics: "物流"
+        settings: "设置"
+
+zh_CN:
+  js:
+    shop:
+      nav:
+        title: "商城"
+        shop: "商城"
+        products: "商品"
+        orders: "订单"
+        logistics: "物流"
+        settings: "设置"
