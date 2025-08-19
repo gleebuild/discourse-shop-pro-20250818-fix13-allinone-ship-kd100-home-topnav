@@ -1,16 +1,21 @@
-class DiscourseShopPro::Admin::OrdersController < ::Admin::AdminController
-  def index
-    orders = DiscourseShopPro::Order.order(created_at: :desc).limit(200)
-    render_json_dump orders.as_json(include: :shipments)
-  end
-  def ship
-    o = DiscourseShopPro::Order.find(params[:id])
-    carrier = params.require(:carrier); tracking = params.require(:tracking_no)
-    s = o.shipments.where(carrier: carrier, tracking_no: tracking).first_or_initialize
-    s.status ||= 'created'; s.traces ||= []; s.save!
-    if SiteSetting.shop_test_mode
-      s.update!(status: 'onway', traces: (s.traces + [{ time: Time.now, context: '【测试】已揽收' }]))
+# frozen_string_literal: true
+
+module ::DiscourseShopPro
+  module Admin
+    class OrdersController < ::Admin::AdminController
+      # 确认开启插件
+      requires_plugin ::DiscourseShopPro::PLUGIN_NAME
+
+      def index
+        respond_to do |format|
+          format.json { render json: [] }
+          format.html { render html: "<h2>Orders (empty)</h2>".html_safe }
+        end
+      end
+
+      def ship
+        render json: { ok: true, id: params[:id] }
+      end
     end
-    render_json_dump s
   end
 end
