@@ -15,17 +15,14 @@ end
 after_initialize do
   ::DiscourseShopPro::DEBUG[:after_initialize_started] = true
 
-  # 定义顶层模块
   module ::DiscourseShopPro
     PLUGIN_NAME = "discourse-shop-pro-20250818-fix13-allinone-ship-kd100-home-topnav"
   end
 
-  # ★ 关键：预先定义中间命名空间，避免 require 时出现
-  # "uninitialized constant DiscourseShopPro::Public/Admin"
+  # 先定义命名空间，避免 require 时出现 "uninitialized constant"
   module ::DiscourseShopPro; module Public; end; end unless defined?(::DiscourseShopPro::Public)
   module ::DiscourseShopPro; module Admin;  end; end unless defined?(::DiscourseShopPro::Admin)
 
-  # 载入 Engine（挂载路由）
   begin
     require_relative 'lib/discourse_shop_pro/engine'
     ::DiscourseShopPro::DEBUG[:engine_loaded] = true
@@ -33,7 +30,6 @@ after_initialize do
     ::DiscourseShopPro::DEBUG[:boot_errors] << "require engine.rb: #{e.class}: #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}"
   end
 
-  # 显式加载控制器（生产环境需要）
   begin
     require_dependency File.expand_path('../app/controllers/discourse_shop_pro/public/products_controller.rb', __FILE__)
     require_dependency File.expand_path('../app/controllers/discourse_shop_pro/admin/orders_controller.rb', __FILE__)
@@ -45,7 +41,7 @@ after_initialize do
   ::DiscourseShopPro::DEBUG[:after_initialize_finished] = true
 end
 
-# ===== 调试 + 业务路由（放在 after_initialize 外）=====
+# 调试 + 业务路由（放在 after_initialize 外）
 Discourse::Application.routes.append do
   require 'json'
 
