@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 # name: discourse-shop-pro-20250818-fix13-allinone-ship-kd100-home-topnav
-# about: Shop (...) + deep DEBUG (no fallback controllers)
-# version: 1.11.0-debugfix3
+# about: Shop (...) + deep DEBUG (namespace bootstrap + safe requires)
+# version: 1.11.0-debugfix4
 # authors: GleeBuild + ChatGPT
 # required_version: 3.0.0
 
@@ -15,14 +15,17 @@ end
 after_initialize do
   ::DiscourseShopPro::DEBUG[:after_initialize_started] = true
 
-  begin
-    module ::DiscourseShopPro
-      PLUGIN_NAME = "discourse-shop-pro-20250818-fix13-allinone-ship-kd100-home-topnav"
-    end
-  rescue => e
-    ::DiscourseShopPro::DEBUG[:boot_errors] << "define module/constant: #{e.class}: #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}"
+  # 定义顶层模块
+  module ::DiscourseShopPro
+    PLUGIN_NAME = "discourse-shop-pro-20250818-fix13-allinone-ship-kd100-home-topnav"
   end
 
+  # ★ 关键：预先定义中间命名空间，避免 require 时出现
+  # "uninitialized constant DiscourseShopPro::Public/Admin"
+  module ::DiscourseShopPro; module Public; end; end unless defined?(::DiscourseShopPro::Public)
+  module ::DiscourseShopPro; module Admin;  end; end unless defined?(::DiscourseShopPro::Admin)
+
+  # 载入 Engine（挂载路由）
   begin
     require_relative 'lib/discourse_shop_pro/engine'
     ::DiscourseShopPro::DEBUG[:engine_loaded] = true
@@ -30,13 +33,11 @@ after_initialize do
     ::DiscourseShopPro::DEBUG[:boot_errors] << "require engine.rb: #{e.class}: #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}"
   end
 
+  # 显式加载控制器（生产环境需要）
   begin
-    # ★ 强制加载真实控制器（生产环境必要）
     require_dependency File.expand_path('../app/controllers/discourse_shop_pro/public/products_controller.rb', __FILE__)
     require_dependency File.expand_path('../app/controllers/discourse_shop_pro/admin/orders_controller.rb', __FILE__)
     require_dependency File.expand_path('../app/controllers/discourse_shop_pro/logistics_controller.rb', __FILE__)
-    # 如需模型也可按需加载：
-    # require_dependency File.expand_path('../app/models/discourse_shop_pro/product.rb', __FILE__)
   rescue => e
     ::DiscourseShopPro::DEBUG[:boot_errors] << "require controllers/models: #{e.class}: #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}"
   end
@@ -44,14 +45,12 @@ after_initialize do
   ::DiscourseShopPro::DEBUG[:after_initialize_finished] = true
 end
 
-# ===== 调试 + 兜底路由（after_initialize 外，安全）=====
+# ===== 调试 + 业务路由（放在 after_initialize 外）=====
 Discourse::Application.routes.append do
   require 'json'
 
-  # ping
   get '/shop/ping' => proc { [200, { 'Content-Type' => 'text/plain' }, ['pong']] }
 
-  # 状态
   get '/shop/debug/status' => proc {
     body = {
       plugin_loaded: true,
@@ -63,14 +62,12 @@ Discourse::Application.routes.append do
     [200, { 'Content-Type' => 'application/json' }, [JSON.pretty_generate(body)]]
   }
 
-  # /shop* 路由清单
   get '/shop/debug/routes' => proc {
     paths = Rails.application.routes.routes.map { |r| (r.path.spec.to_s rescue nil) }
              .compact.select { |p| p.start_with?('/shop') }.sort
     [200, { 'Content-Type' => 'application/json' }, [JSON.pretty_generate({ routes: paths })]]
   }
 
-  # 路由识别
   get '/shop/debug/match' => proc { |env|
     req = Rack::Request.new(env)
     path = req.params['path'].to_s
@@ -88,7 +85,7 @@ Discourse::Application.routes.append do
     [200, { 'Content-Type' => 'application/json' }, [JSON.pretty_generate(result)]]
   }
 
-  # 业务路由（指向真实控制器）
+  # 业务路由
   get  '/shop/public/products'       => 'discourse_shop_pro/public/products#index'
   get  '/shop/public/products/:id'   => 'discourse_shop_pro/public/products#show'
   get  '/shop/admin/orders'          => 'discourse_shop_pro/admin/orders#index'
