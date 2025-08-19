@@ -18,8 +18,8 @@ after_initialize do
   Discourse::Application.routes.append do
     get '/shop/public/products' => 'discourse_shop_pro/public/products#index'
     get '/shop/public/products/:id' => 'discourse_shop_pro/public/products#show'
-    get '/shop/admin/orders' => 'discourse_shop_pro/admin/orders#index'
-    post '/shop/admin/orders/:id/ship' => 'discourse_shop_pro/admin/orders#ship'
-    post '/shop/logistics/kd100/notify' => 'discourse_shop_pro/logistics#kd100_notify'
+    get '/admin/plugins/discourse-shop-pro-20250818-fix13-allinone-ship-kd100-home-topnav/orders' => 'discourse_shop_pro/admin/orders#index'
+    post '/admin/plugins/discourse-shop-pro-20250818-fix13-allinone-ship-kd100-home-topnav/orders/:id/ship' => 'discourse_shop_pro/admin/orders#ship'
+    post '/admin/plugins/discourse-shop-pro-20250818-fix13-allinone-ship-kd100-home-topnav/logistics/kd100/notify' => 'discourse_shop_pro/logistics#kd100_notify'
   end
 end
