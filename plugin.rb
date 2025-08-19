@@ -1,14 +1,13 @@
 # frozen_string_literal: true
 # name: discourse-shop-pro-20250818-fix13-allinone-ship-kd100-home-topnav
 # about: Shop (Products/Orders/WeChatPay/TopicWidget) + Kuaidi100 + Home strip + idempotent migration + robust routes + TOP NAV + DEBUG
-# version: 1.11.0-debug
+# version: 1.11.0-debugfix
 # authors: GleeBuild + ChatGPT
 # required_version: 3.0.0
 
 enabled_site_setting :shop_enabled
 register_asset 'stylesheets/common/discourse-shop-pro.scss'
 
-# ---- 诊断用全局存储（内存）----
 module ::DiscourseShopPro
   DEBUG = {
     boot_errors: [],
@@ -30,23 +29,38 @@ after_initialize do
   end
 
   begin
+    # 1) 先加载 Engine（挂 /shop）
     require_relative 'lib/discourse_shop_pro/engine'
     ::DiscourseShopPro::DEBUG[:engine_loaded] = true
   rescue => e
     ::DiscourseShopPro::DEBUG[:boot_errors] << "require engine.rb: #{e.class}: #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}"
   end
 
+  begin
+    # 2) 显式加载 Controllers（生产环境下常见：不主动加载就 constantize 失败）
+    require_dependency File.expand_path('../app/controllers/discourse_shop_pro/public/products_controller.rb', __FILE__)
+    require_dependency File.expand_path('../app/controllers/discourse_shop_pro/admin/orders_controller.rb', __FILE__)
+    require_dependency File.expand_path('../app/controllers/discourse_shop_pro/logistics_controller.rb', __FILE__)
+
+    # （可选）如需保证模型也可用，按需加载（你的 index 有 rescue，不一定需要）
+    # require_dependency File.expand_path('../app/models/discourse_shop_pro/product.rb', __FILE__)
+    # require_dependency File.expand_path('../app/models/discourse_shop_pro/order.rb', __FILE__)
+    # require_dependency File.expand_path('../app/models/discourse_shop_pro/shipment.rb', __FILE__)
+  rescue => e
+    ::DiscourseShopPro::DEBUG[:boot_errors] << "require controllers/models: #{e.class}: #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}"
+  end
+
   ::DiscourseShopPro::DEBUG[:after_initialize_finished] = true
 end
 
-# ---- 兜底 + 调试 路由（放在 after_initialize 外，确保即便上面报错也能生效）----
+# === 调试与兜底路由（留在 after_initialize 外，确保即便上面报错也可访问）===
 Discourse::Application.routes.append do
   require 'json'
 
-  # 0) 最小“存活”探测
+  # ping
   get '/shop/ping' => proc { [200, { 'Content-Type' => 'text/plain' }, ['pong']] }
 
-  # 1) 状态页：after_initialize 及 engine 加载情况
+  # status
   get '/shop/debug/status' => proc {
     body = {
       plugin_loaded: true,
@@ -61,21 +75,15 @@ Discourse::Application.routes.append do
     [200, { 'Content-Type' => 'application/json' }, [JSON.pretty_generate(body)]]
   }
 
-  # 2) 列出所有以 /shop 开头的已注册路由（最终生效的）
+  # routes
   get '/shop/debug/routes' => proc {
     paths = Rails.application.routes.routes.map { |r|
-      begin
-        r.path.spec.to_s
-      rescue
-        nil
-      end
+      begin r.path.spec.to_s rescue nil end
     }.compact.select { |p| p.start_with?('/shop') }.sort
-
     [200, { 'Content-Type' => 'application/json' }, [JSON.pretty_generate({ routes: paths })]]
   }
 
-  # 3) 试着识别一个路径会匹配到哪个 controller#action
-  #    用法：/shop/debug/match?path=/shop/public/products.json
+  # match
   get '/shop/debug/match' => proc { |env|
     req = Rack::Request.new(env)
     path = req.params['path'].to_s
@@ -90,11 +98,10 @@ Discourse::Application.routes.append do
           { path: path, recognized: false, error: "#{e.class}: #{e.message}" }
         end
       end
-
     [200, { 'Content-Type' => 'application/json' }, [JSON.pretty_generate(result)]]
   }
 
-  # 4) 原计划的“兜底业务路由”——指向 controller（便于在 engine 失效时仍可测试）
+  # 业务路由
   get  '/shop/public/products'       => 'discourse_shop_pro/public/products#index'
   get  '/shop/public/products/:id'   => 'discourse_shop_pro/public/products#show'
   get  '/shop/admin/orders'          => 'discourse_shop_pro/admin/orders#index'
