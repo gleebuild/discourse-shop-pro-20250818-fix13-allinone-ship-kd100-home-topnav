@@ -1,26 +1,9 @@
 # frozen_string_literal: true
-module DiscourseShopPro
+
+module ::DiscourseShopPro
   class Engine < ::Rails::Engine
-    engine_name DiscourseShopPro::PLUGIN_NAME
+    engine_name PLUGIN_NAME
     isolate_namespace DiscourseShopPro
+    # 这里不画 engine 路由，路由已在 plugin.rb 里 append 了
   end
-end
-
-Discourse::Application.routes.append do
-  mount ::DiscourseShopPro::Engine, at: '/shop'
-end
-
-DiscourseShopPro::Engine.routes.draw do
-  root to: 'public/products#index'
-  get '/public/products', to: 'public/products#index'
-  get '/public/products/:id', to: 'public/products#show'
-
-  namespace :admin do
-    get '/bootstrap' => 'admin#bootstrap'
-    resources :orders, only: [:index] do
-      post :ship, on: :member
-    end
-  end
-
-  post '/logistics/kd100/notify', to: 'logistics#kd100_notify'
 end
