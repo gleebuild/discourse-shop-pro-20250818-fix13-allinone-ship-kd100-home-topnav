@@ -3,7 +3,7 @@
 module ::DiscourseShopPro
   module Admin
     class OrdersController < ::Admin::AdminController
-      # 确认开启插件
+      # 仅管理员可访问；非 admin 会被 Discourse 伪装成 404
       requires_plugin ::DiscourseShopPro::PLUGIN_NAME
 
       def index
