@@ -1,28 +1,27 @@
-class DiscourseShopPro::Public::ProductsController < ::ApplicationController
-  skip_before_action :ensure_logged_in, raise: false
-  skip_before_action :redirect_to_login_if_required, raise: false
-  skip_before_action :check_xhr, raise: false
-  skip_before_action :preload_json, raise: false
-  skip_before_action :verify_authenticity_token, raise: false
+# frozen_string_literal: true
 
-  def index
-    limit = (params[:limit] || 100).to_i.clamp(1, 200)
-    scope = DiscourseShopPro::Product.where(on_sale: true).order(created_at: :desc).limit(limit) rescue []
-    @products = scope
-    respond_to do |format|
-      format.html { render layout: false }
-      format.json do
-        render json: scope.map { |p|
-          specs = Array(p.specs)
-          price = specs.first.is_a?(Hash) ? specs.first["price_cents"].to_i : 0
-          { id: p.id, title: p.title, images: p.images || [], price_cents: price }
-        }
+# 命名空间逐层定义，避免生产环境 Zeitwerk 提示 "uninitialized constant"
+module ::DiscourseShopPro
+  module Public
+    class ProductsController < ::ApplicationController
+      # 允许匿名访问；有的 before_action 在某些版本不存在，因此 raise: false
+      skip_before_action :check_xhr, :redirect_to_login_if_required, :ensure_logged_in, raise: false
+
+      def index
+        # 先返回一个“空列表”占位；确认路由与控制器无误后，再接入真实数据
+        respond_to do |format|
+          format.json { render json: [] }
+          format.html { render html: "<h2>Products (empty)</h2>".html_safe }
+        end
+      end
+
+      def show
+        pid = params[:id]
+        respond_to do |format|
+          format.json { render json: { id: pid, name: "Product #{pid}" } }
+          format.html { render html: "<h2>Product ##{pid}</h2>".html_safe }
+        end
       end
     end
-  end
-
-  def show
-    @product = DiscourseShopPro::Product.find(params[:id])
-    render layout: false
   end
 end
