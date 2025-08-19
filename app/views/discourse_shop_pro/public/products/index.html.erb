@@ -1,0 +1,9 @@
+<h1>Products</h1>
+<ul>
+  <% @products.each do |p| %>
+    <li>
+      <%= p.name %> - <%= p.price_cents %> cents
+      <% if p.image_url %><br/><img src="<%= p.image_url %>" style="max-width:160px; height:auto;" /><% end %>
+    </li>
+  <% end %>
+</ul>
