@@ -1,14 +1,13 @@
-class DiscourseShopPro::LogisticsController < ::ApplicationController
-  skip_before_action :verify_authenticity_token
-  def kd100_notify
-    json = JSON.parse(request.raw_post) rescue {}
-    last = json["lastResult"] || {}
-    number = last["nu"] || json["nu"]
-    data = last["data"] || []
-    if number
-      ship = DiscourseShopPro::Shipment.where(tracking_no: number).order(created_at: :desc).first
-      ship&.update!(status: (last["state"] || json["status"]).to_s, traces: data)
+# frozen_string_literal: true
+
+module ::DiscourseShopPro
+  class LogisticsController < ::ApplicationController
+    skip_before_action :check_xhr, :redirect_to_login_if_required, :ensure_logged_in, raise: false
+    protect_from_forgery with: :null_session
+
+    # 快递 100 异步回调占位
+    def kd100_notify
+      render plain: "ok"
     end
-    render json: { result: true, returnCode: "200", message: "OK" }
   end
 end
