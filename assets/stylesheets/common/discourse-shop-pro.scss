@@ -1,9 +1,0 @@
-.card{border:1px solid var(--primary-low);border-radius:12px;padding:1rem;margin:1rem 0}
-.shop-admin .card{padding:1rem}
-.shop-home-strip__header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
-.shop-home-strip__grid{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:12px}
-.shop-home-strip .item{display:block;text-decoration:none;border:1px solid var(--primary-low);border-radius:10px;padding:.5rem}
-.shop-home-strip .item img{width:100%;height:120px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;background:var(--primary-very-low)}
-.shop-home-strip .title{font-weight:700;margin:.25rem 0}
-.shop-home-strip .price{color:var(--danger)}
-.shop-nav-link{margin-left:.5rem}
